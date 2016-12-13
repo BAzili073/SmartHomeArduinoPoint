@@ -12,9 +12,10 @@ void setup_radio(){
 void radio_send(int out_adress){
   output_message[3] = out_adress;
   radio.stopListening();
-  Log.Info("Send message = [%d,%d,%d,%d]"CR,output_message[0],output_message[1],output_message[2],output_message[3]);
+  radio.flush_tx();
+//  Log.Info("Send message = [%d,%d,%d,%d]"CR,output_message[0],output_message[1],output_message[2],output_message[3]);
   radio.write (&output_message, sizeof(output_message));
-  radio.startListening();   
+  radio.startListening();    
 }
 
 void radio_rec(){
@@ -26,7 +27,14 @@ void radio_rec(){
 //    if (input_message[3]){
         radio.read( &input_message, sizeof(input_message) );  
         Log.Info ("Input message - [%d,%d,%d,%d]"CR,input_message[0],input_message[1],input_message[2],input_message[3]);
-        analysis_Message();
+//        analysis_Message();
+        if (role == 0) {
+//          if (input_message[3] == counter) succ_pack++;
+//          Log.Info ("Succ - %d"CR,succ);
+            rec_send_pack = input_message[3];
+        }else if (role == 1){
+          radio_send(input_message[3]);
+        }
   }
 }
 
