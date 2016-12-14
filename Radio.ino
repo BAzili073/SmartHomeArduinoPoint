@@ -12,14 +12,14 @@ void setup_radio(){
 void radio_send(int out_adress){
   output_message[3] = out_adress;
   radio.stopListening();
-  radio.flush_tx();
 //  Log.Info("Send message = [%d,%d,%d,%d]"CR,output_message[0],output_message[1],output_message[2],output_message[3]);
   radio.write (&output_message, sizeof(output_message));
   radio.startListening();    
 }
 
 void radio_rec(){
-  if (radio.available()){
+  state_radio = 1;
+  while (radio.available()){
 //    bool done = false;
 //    while (!done){
 //      done = radio.read( &input_message, sizeof(input_message) );
@@ -36,6 +36,7 @@ void radio_rec(){
           radio_send(input_message[3]);
         }
   }
+  state_radio = 0;
 }
 
 
