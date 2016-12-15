@@ -5,5 +5,5 @@ void setupTimer(long mcsec) {
 
 void timerIsr()
 { 
-  if (radio_values[RADIO_VALUES_SEND_TIME]) radio_values[RADIO_VALUES_SEND_TIME]--;
+  if (radio_values.send_time) radio_values.send_time--;
 }

@@ -1,6 +1,29 @@
+int get_int()
+{
+    while (!(Serial.available())); 
+        return Serial.read();
+  
+}
+
+
 void serialEvent() {
     while (Serial.available()) {
-        int magic = Serial.read();
+        int temp1 = Serial.read();
+        delay(10);
+        int temp2 = Serial.read();
+        delay(10);
+        int temp3 = Serial.read();
+        delay(10);
+        int temp4 = Serial.read();
+        delay(10);
+        int temp5 = Serial.read();
+        Log.Info ("%d,%d,%d,%d,%d"CR,temp1,temp2,temp3,temp4,temp5);
+        radio_send_message(temp2,temp3,temp4,temp5);
     }
+
+
+
+
+    
 }
 
