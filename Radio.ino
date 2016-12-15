@@ -7,44 +7,60 @@ void setup_radio(){
   radio.openReadingPipe(1,pipes[2]);
   radio.startListening();  //начинаем слушать;
   radio.printDetails();
+
+
+  radio_flags[RADIO_FLAGS_SEND_SUCC] = 1;
 }
 
 void radio_send(){
   radio.stopListening();
-//  Log.Info("Send message = [%d,%d,%d,%d]"CR,output_message[0],output_message[1],output_message[2],output_message[3]);
+#ifdef DEBUG
+//  Log.Info("Send message = [%d,%d,%d,%d,%d]"CR,radio_output_message[0],radio_output_message[1],radio_output_message[2],radio_output_message[3],radio_output_message[4]);
+#endif
   radio.write (&radio_output_message, sizeof(radio_output_message));
   radio.startListening();
+  radio_flags[RADIO_FLAGS_SEND_NEED] = 0;
 }
 
-void radio_send_message(int ID_receiver,int command, int arg1,int arg2){
+bool radio_send_message(int ID_receiver,int command, int arg1,int arg2){
+  if (!radio_flags[RADIO_FLAGS_SEND_SUCC]) return false;
+  radio_values[RADIO_VALUES_ID_COMMANDS]++;
+  if (radio_values[RADIO_VALUES_ID_COMMANDS] == 254) radio_values[RADIO_VALUES_ID_COMMANDS] = 0;
   radio_output_message[RADIO_MESSAGE_ID_RECIVER] = ID_receiver;
-  radio_output_message[RADIO_MESSAGE_ID_COMMAND] = radio_ID_command;
+  radio_output_message[RADIO_MESSAGE_ID_COMMAND] = radio_values[RADIO_VALUES_ID_COMMANDS];
   radio_output_message[RADIO_MESSAGE_COMMAND] = command;
   radio_output_message[RADIO_MESSAGE_ARG_1] = arg1;
   radio_output_message[RADIO_MESSAGE_ARG_2] = arg2;
-  radio_send();
+  radio_flags[RADIO_FLAGS_SEND_NEED] = 1;
+  radio_flags[RADIO_FLAGS_SEND_SUCC] = 0;
+#ifdef DEBUG
+//  Log.Info("RADIO SEND MESSAGE!  ID COMMAND: "CR,radio_input_message[RADIO_MESSAGE_ID_COMMAND]);
+#endif
+  return true;
 }
 
 void radio_send_response(){
-  radio_output_message[RADIO_MESSAGE_ID_RECIVER] = radio_input_message[RADIO_MESSAGE_ID_SENDER];
-  radio_output_message[RADIO_MESSAGE_ID_COMMAND] = radio_input_message[RADIO_MESSAGE_ID_COMMAND];
-  radio_output_message[RADIO_MESSAGE_COMMAND] = RADIO_COMMAND_RESPONSE_OK;
-  radio_output_message[RADIO_MESSAGE_ARG_1] = 0;
-  radio_output_message[RADIO_MESSAGE_ARG_2] = 0;
-  radio_send();
+  radio_response_message[RADIO_MESSAGE_ID_RECIVER] = radio_input_message[RADIO_MESSAGE_ID_SENDER];
+  radio_response_message[RADIO_MESSAGE_ID_COMMAND] = radio_input_message[RADIO_MESSAGE_ID_COMMAND];
+  radio_response_message[RADIO_MESSAGE_COMMAND] = RADIO_COMMAND_RESPONSE_OK;
+  radio_response_message[RADIO_MESSAGE_ARG_1] = 0;
+  radio_response_message[RADIO_MESSAGE_ARG_2] = 0;
+  radio.stopListening();
+  radio.write (&radio_response_message, sizeof(radio_response_message));
+  radio.startListening();
 }
 
 
 
 void radio_rec(){
   while (radio.available()){
-    bool done = false;
-    while (!done){
-      done = radio.read( &radio_input_message, sizeof(radio_input_message) );
-    }
-//        radio.read( &radio_input_message, sizeof(radio_input_message) );
+//    bool done = false;
+//    while (!done){
+//      done = radio.read( &radio_input_message, sizeof(radio_input_message) );
+//    }
+        radio.read( &radio_input_message, sizeof(radio_input_message) );
 #ifdef DEBUG
-        Log.Info ("Input message - [%d,%d,%d,%d,%d]"CR,radio_input_message[0],radio_input_message[1],radio_input_message[2],radio_input_message[3],radio_input_message[4]);
+//        Log.Info ("Input message - [%d,%d,%d,%d,%d]"CR,radio_input_message[0],radio_input_message[1],radio_input_message[2],radio_input_message[3],radio_input_message[4]);
 #endif
        if ((radio_input_message[RADIO_MESSAGE_ID_RECIVER] == point_ID) ||  (radio_input_message[RADIO_MESSAGE_ID_RECIVER] == RADIO_MESSAGE_FOR_ALL)){
           if ((radio_input_message[RADIO_MESSAGE_ID_RECIVER] != RADIO_MESSAGE_FOR_ALL) && (radio_input_message[RADIO_MESSAGE_COMMAND] != RADIO_COMMAND_RESPONSE_OK)){
@@ -58,16 +74,33 @@ void radio_rec(){
 
 void analysis_Message(){
     switch (radio_input_message[RADIO_MESSAGE_COMMAND]){
-    case 0:                                      //Если это инфосообщение
 
-      break;
-      /////////////////
-    case 1:                                  //Если это сообщение управления
-
+      
+    case RADIO_COMMAND_RESPONSE_OK:                   //ответ о принятой команде!
+        if (radio_values[RADIO_VALUES_ID_COMMANDS] == radio_input_message[RADIO_MESSAGE_ID_COMMAND]){
+          radio_flags[RADIO_FLAGS_SEND_SUCC] = 1;
+          radio_values[RADIO_VALUES_SEND_TIME] = 0;
+#ifdef DEBUG
+if (radio_input_message[RADIO_MESSAGE_ID_COMMAND] == 200){
+     Log.Info ("Response OK! ID command: %d"CR,radio_input_message[RADIO_MESSAGE_ID_COMMAND]);
+     int mean_try = all_try/radio_input_message[RADIO_MESSAGE_ID_COMMAND];
+     Log.Info ("ALL/MAX/MEAN = %d/%d/%d]"CR,all_try,try_max,mean_try);
+}
+     if (try_max < radio_values[RADIO_VALUES_SEND_TRY]) try_max = radio_values[RADIO_VALUES_SEND_TRY];
+     radio_values[RADIO_VALUES_SEND_TRY] = 0;
+#endif
+        }
     break;
-      /////////////////////////
-    case 2:                                             //Если это сообщение запрос
+    
+    case RADIO_COMMAND_PINMODE:
+      pinMode(radio_input_message[RADIO_MESSAGE_ARG_1],radio_input_message[RADIO_MESSAGE_ARG_2]);
+    break;
 
+    case RADIO_COMMAND_DIGITAL_WRITE:
+      digitalWrite(radio_input_message[RADIO_MESSAGE_ARG_1],radio_input_message[RADIO_MESSAGE_ARG_2]);
+    break;
+    case RADIO_COMMAND_ANALOG_WRITE:
+      digitalWrite(radio_input_message[RADIO_MESSAGE_ARG_1],radio_input_message[RADIO_MESSAGE_ARG_2]);
     break;
     }
   radio_clean_radio_input_message();
@@ -75,11 +108,13 @@ void analysis_Message(){
 
 
 void radio_work(){
-      if (!radio_send_need){
-        radio_rec();
-      }else{
+      if ((radio_flags[RADIO_FLAGS_SEND_NEED]) || (!radio_flags[RADIO_FLAGS_SEND_SUCC] && !radio_values[RADIO_VALUES_SEND_TIME])){
         radio_send ();
-        radio_send_need = 0;
+        radio_values[RADIO_VALUES_SEND_TRY]++;
+        all_try++;
+        radio_values[RADIO_VALUES_SEND_TIME] = 3;
+      }else{
+        radio_rec();        
     }
 }
 
