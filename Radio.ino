@@ -15,7 +15,13 @@ void setup_radio(){
 void radio_send(){
   radio.stopListening();
 #ifdef DEBUG
-  Log.Info("Send message = [%d,%d,%d,%d,%d]"CR,radio_output_message[0],radio_output_message[1],radio_output_message[2],radio_output_message[3],radio_output_message[4]);
+  Log.Info("Send message = [%d,%d,%d,%d,%d,%d]"CR,
+  radio_output_message[RADIO_MESSAGE_ID_SENDER],
+  radio_output_message[RADIO_MESSAGE_ID_RECIVER],
+  radio_output_message[RADIO_MESSAGE_ID_COMMAND],
+  radio_output_message[RADIO_MESSAGE_COMMAND],
+  radio_output_message[RADIO_MESSAGE_ARG_1],
+  radio_output_message[RADIO_MESSAGE_ARG_2]);
 #endif
   radio.write (&radio_output_message, sizeof(radio_output_message));
   radio.startListening();
@@ -66,13 +72,17 @@ void radio_rec(){
           if ((radio_input_message[RADIO_MESSAGE_ID_RECIVER] != RADIO_MESSAGE_FOR_ALL) && (radio_input_message[RADIO_MESSAGE_COMMAND] != RADIO_COMMAND_RESPONSE_OK)){
             radio_send_response();
           }
-         analysis_Message();
+          if (radio_values.last_id_command != radio_input_message[RADIO_MESSAGE_ID_COMMAND]){
+            analysis_Message();
+          }     
       }
   }
 }
 
 
 void analysis_Message(){
+    radio_values.last_id_command = radio_input_message[RADIO_MESSAGE_ID_COMMAND]; 
+    
     switch (radio_input_message[RADIO_MESSAGE_COMMAND]){
 
       
@@ -81,12 +91,14 @@ void analysis_Message(){
           radio_flags[RADIO_FLAGS_SEND_SUCC] = 1;
           radio_values.send_time = 0;
 #ifdef DEBUG
+static int try_max = 0;
+
 if (radio_input_message[RADIO_MESSAGE_ID_COMMAND] == 200){
      Log.Info ("Response OK! ID command: %d"CR,radio_input_message[RADIO_MESSAGE_ID_COMMAND]);
      int mean_try = all_try/radio_input_message[RADIO_MESSAGE_ID_COMMAND];
      Log.Info ("ALL/MAX/MEAN = %d/%d/%d]"CR,all_try,try_max,mean_try);
-}
      if (try_max < radio_values.send_try) try_max = radio_values.send_try;
+}    
      radio_values.send_try = 0;
 #endif
         }
@@ -106,6 +118,9 @@ if (radio_input_message[RADIO_MESSAGE_ID_COMMAND] == 200){
     break;
     case RADIO_COMMAND_ANALOG_WRITE:
       digitalWrite(radio_input_message[RADIO_MESSAGE_ARG_1],radio_input_message[RADIO_MESSAGE_ARG_2]);
+  #ifdef DEBUG
+     Log.Info ("digitalWrite(%d,%d);"CR,radio_input_message[RADIO_MESSAGE_ARG_1],radio_input_message[RADIO_MESSAGE_ARG_2]);
+#endif 
     break;
     }
   radio_clean_radio_input_message();

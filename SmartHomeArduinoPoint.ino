@@ -7,7 +7,7 @@
 #include "RF24.h"
 
 #define DEBUG
-//#define POINT_ID_PROG 1
+//#define POINT_ID_PROG 3
 
 struct Radio_a {
   int point_id;
@@ -15,7 +15,12 @@ struct Radio_a {
   int send_time;
   int send_try;
   int master_id;
+  int last_id_command;
 };
+
+void(* resetFunc) (void) = 0; // объявляем функцию reset
+//resetFunc(); //вызываем reset
+
 Radio_a radio_values;
 
 #define RADIO_MESSAGE_FOR_ALL 999
@@ -46,8 +51,7 @@ int radio_response_message[RADIO_MESSAGE_LEN];
 
 int radio_flags[2] = {0,0};
 long counter = 0;
-int try_max = 0;
-int all_try = 0;
+
 ////////////////////////////////
 
 
