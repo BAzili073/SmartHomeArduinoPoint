@@ -4,7 +4,7 @@ void EEPROM_readSettings() {
 
 #ifdef POINT_ID_PROG
   radio_values.point_id = POINT_ID_PROG;
-  radio_values.master_id = 0;
+  radio_values.master_id = 1;
   EEPROM.put(0,radio_values.point_id);
   EEPROM.put(2,radio_values.master_id);
 #endif

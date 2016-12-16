@@ -1,4 +1,4 @@
-#include <Logging.h>
+
 #include <TimerOne.h>
 #include <EEPROM.h>
 //////////////   RADIO /////////////////////////
@@ -7,6 +7,11 @@
 #include "RF24.h"
 
 #define DEBUG
+
+#ifdef DEBUG
+#include <Logging.h>
+#endif
+
 //#define POINT_ID_PROG 3
 
 struct Radio_a {
@@ -17,11 +22,18 @@ struct Radio_a {
   int master_id;
   int last_id_command;
 };
+Radio_a radio_values;
+
+#define PIN_VALUES_MODE 0
+#define PIN_VALUES_NOTIFY_CHANGE 1
+#define PIN_VALUES_STATE 2
+int pin_values[21][3];
+
 
 void(* resetFunc) (void) = 0; // объявляем функцию reset
 //resetFunc(); //вызываем reset
 
-Radio_a radio_values;
+
 
 #define RADIO_MESSAGE_FOR_ALL 999
 
@@ -29,6 +41,15 @@ Radio_a radio_values;
 #define RADIO_COMMAND_PINMODE 2
 #define RADIO_COMMAND_DIGITAL_WRITE 3
 #define RADIO_COMMAND_ANALOG_WRITE 4
+#define RADIO_COMMAND_PIN_NOTIFY_CHANGE 5
+#define RADIO_COMMAND_PIN_SET_SETTING 6
+#define RADIO_COMMAND_PIN_RESET_SETTING 7
+#define RADIO_COMMAND_DIGITALREAD 8
+#define RADIO_COMMAND_ANALOGREAD 9
+
+#define RADIO_COMMAND_DIGITALREAD_RESP 108
+#define RADIO_COMMAND_ANALOGREAD_RESP 109
+
 
 #define RADIO_MESSAGE_ID_SENDER 0
 #define RADIO_MESSAGE_ID_RECIVER 1
@@ -52,6 +73,7 @@ int radio_response_message[RADIO_MESSAGE_LEN];
 int radio_flags[2] = {0,0};
 long counter = 0;
 
+int all_try=0;
 ////////////////////////////////
 
 
@@ -70,13 +92,16 @@ void setup() {
 Serial.begin(9600);
 pinMode (LED,OUTPUT);
 setup_radio();
+#ifdef DEBUG
 Log.Init(LOGLEVEL, 9600L);
+#endif
 setupTimer(1000);
 EEPROM_readSettings();
 }
 
 void loop() {
   radio_work();
+  react_to_change();
 //  if (point_ID == 1){
 //      counter++;
 //      if (counter == 10000){
