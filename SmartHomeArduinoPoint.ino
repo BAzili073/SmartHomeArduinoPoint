@@ -1,4 +1,5 @@
 
+#include "DHT.h"
 #include <TimerOne.h>
 #include <EEPROM.h>
 //////////////   RADIO /////////////////////////
@@ -7,7 +8,6 @@
 #include "RF24.h"
 
 #define DEBUG
-
 #ifdef DEBUG
 #include <Logging.h>
 #endif
@@ -23,11 +23,11 @@ struct Radio_a {
   int last_id_command;
 };
 Radio_a radio_values;
-
+#define PIN_NUMBERS 21
 #define PIN_VALUES_MODE 0
 #define PIN_VALUES_NOTIFY_CHANGE 1
 #define PIN_VALUES_STATE 2
-int pin_values[21][3];
+int pin_values[PIN_NUMBERS][3];
 
 
 void(* resetFunc) (void) = 0; // объявляем функцию reset
@@ -46,6 +46,10 @@ void(* resetFunc) (void) = 0; // объявляем функцию reset
 #define RADIO_COMMAND_PIN_RESET_SETTING 7
 #define RADIO_COMMAND_DIGITALREAD 8
 #define RADIO_COMMAND_ANALOGREAD 9
+#define RADIO_COMMAND_DHT_TEMP_GET 10
+#define RADIO_COMMAND_DHT_TEMP_RESP 11
+#define RADIO_COMMAND_DHT_HUMI_GET 12
+#define RADIO_COMMAND_DHT_HUMI_RESP 13
 
 #define RADIO_COMMAND_DIGITALREAD_RESP 108
 #define RADIO_COMMAND_ANALOGREAD_RESP 109
@@ -63,6 +67,9 @@ void(* resetFunc) (void) = 0; // объявляем функцию reset
 #define RADIO_FLAGS_SEND_NEED 0
 #define RADIO_FLAGS_SEND_SUCC 1
 
+#define DHT_NUMBERS 3
+DHT * dht[DHT_NUMBERS];
+int DHT_sensors[DHT_NUMBERS];
 
 RF24 radio(9,10); // Определяем рабочие ножки RF24;
 const uint64_t pipes[3] = { 0xF0F0F0F0E1LL, 0xF0F0F0F0D2LL,0xE8E8F0F0E1LL };

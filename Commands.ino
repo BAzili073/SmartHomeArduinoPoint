@@ -6,7 +6,7 @@
 
 void react_to_change(){
   int i;
-  for (i = 0; i < 22; i++){
+  for (i = 0; i < PIN_NUMBERS; i++){
     if ((pin_values[i][PIN_VALUES_MODE] == INPUT) && (pin_values[i][PIN_VALUES_NOTIFY_CHANGE])){
       int a = digitalRead(i);
         if ( a != pin_values[i][PIN_VALUES_STATE]){
@@ -73,6 +73,12 @@ if (radio_input_message[RADIO_MESSAGE_ID_COMMAND] == 200){
     case RADIO_COMMAND_ANALOGREAD:
          radio_send_message(radio_values.master_id,RADIO_COMMAND_ANALOGREAD_RESP,radio_input_message[RADIO_MESSAGE_ARG_1],analogRead(radio_input_message[RADIO_MESSAGE_ARG_1]));
     break;
+    case RADIO_COMMAND_DHT_TEMP_GET:
+         radio_send_message(radio_values.master_id,RADIO_COMMAND_DHT_TEMP_RESP,radio_input_message[RADIO_MESSAGE_ARG_1],dht[get_dht_id_of_pin(radio_input_message[RADIO_MESSAGE_ARG_1])]->readTemperature());
+    break;
+    case RADIO_COMMAND_DHT_HUMI_GET:
+         radio_send_message(radio_values.master_id,RADIO_COMMAND_DHT_HUMI_RESP,radio_input_message[RADIO_MESSAGE_ARG_1],dht[get_dht_id_of_pin(radio_input_message[RADIO_MESSAGE_ARG_1])]->readHumidity());
+    break;
     }
   radio_clean_radio_input_message();
 }
@@ -80,4 +86,22 @@ if (radio_input_message[RADIO_MESSAGE_ID_COMMAND] == 200){
 void pin_change_setting(int pin, int setting,int value){
   pin_values[pin][setting] = value;
 }
+
+void add_dht_sensor(int pin,int type){
+  static int dht_counter = 0;
+  DHT_sensors[dht_counter] = pin;
+  dht[dht_counter] = new DHT(pin, type);
+  dht[dht_counter]->begin();
+}
+
+int get_dht_id_of_pin(int pin){
+  int i;
+  for (i = 0; i < DHT_NUMBERS;i++){
+    if (DHT_sensors[i] == pin) return i; 
+  }
+}
+
+
+
+
 
