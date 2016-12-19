@@ -73,8 +73,10 @@ void radio_rec(){
             radio_send_response();
           }
           if (radio_values.last_id_command != radio_input_message[RADIO_MESSAGE_ID_COMMAND]){
+            time_values.radio_break = TIME_VALUES_RADIO_BREAK;
             analysis_Message();
           }     
+          
       }
   }
 }

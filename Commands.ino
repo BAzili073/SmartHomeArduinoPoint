@@ -82,6 +82,20 @@ if (radio_input_message[RADIO_MESSAGE_ID_COMMAND] == 200){
     case RADIO_COMMAND_DHT_ADD:
           add_dht_sensor(radio_input_message[RADIO_MESSAGE_ARG_1],radio_input_message[RADIO_MESSAGE_ARG_2]);
     break;
+    case RADIO_COMMAND_FULL_RESET:
+#ifdef DEBUG
+  Log.Info ("FULL RESET BY RADIO COMMAND!"CR);
+#endif
+      time_values.radio_break = 0;
+    break;
+       
+    case RADIO_COMMAND_CHANGE_POINT_ID:
+      EEPROM.put(0,radio_input_message[RADIO_MESSAGE_ARG_1]);
+      radio_values.point_id = radio_input_message[RADIO_MESSAGE_ARG_1];
+#ifdef DEBUG
+  Log.Info ("Change point ID! New Point ID: %d!"CR,radio_input_message[RADIO_MESSAGE_ARG_1]);
+#endif
+    break;
     }
   radio_clean_radio_input_message();
 }

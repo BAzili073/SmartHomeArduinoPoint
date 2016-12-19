@@ -13,6 +13,15 @@
 #endif
 
 //#define POINT_ID_PROG 3
+struct Time_values {
+  byte sec;
+  byte min;
+  int msec;
+  int radio_break;
+  byte start;
+};
+Time_values time_values;
+#define TIME_VALUES_RADIO_BREAK 5//minutes
 
 struct Radio_a {
   int point_id;
@@ -21,8 +30,10 @@ struct Radio_a {
   int send_try;
   int master_id;
   int last_id_command;
+  int time_break;
 };
 Radio_a radio_values;
+
 #define PIN_NUMBERS 21
 #define PIN_VALUES_MODE 0
 #define PIN_VALUES_NOTIFY_CHANGE 1
@@ -30,7 +41,7 @@ Radio_a radio_values;
 
 int pin_values[PIN_NUMBERS][3];
 
-
+int reset_need = 0;
 void(* resetFunc) (void) = 0; // объявляем функцию reset
 //resetFunc(); //вызываем reset
 
@@ -52,6 +63,8 @@ void(* resetFunc) (void) = 0; // объявляем функцию reset
 #define RADIO_COMMAND_DHT_HUMI_GET 12
 #define RADIO_COMMAND_DHT_HUMI_RESP 13
 #define RADIO_COMMAND_DHT_ADD 14
+#define RADIO_COMMAND_FULL_RESET 15
+#define RADIO_COMMAND_CHANGE_POINT_ID 16
 
 #define RADIO_COMMAND_DIGITALREAD_RESP 108
 #define RADIO_COMMAND_ANALOGREAD_RESP 109
@@ -100,12 +113,12 @@ int fail_pack = 0;
 void setup() {
 Serial.begin(9600);
 pinMode (LED,OUTPUT);
-setup_radio();
 #ifdef DEBUG
 Log.Init(LOGLEVEL, 9600L);
-#endif
-setupTimer(1000);
+#endif  
 EEPROM_readSettings();
+setupTimer(1000);
+setup_radio();
 }
 
 void loop() {

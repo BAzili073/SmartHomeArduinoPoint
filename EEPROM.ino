@@ -1,6 +1,7 @@
 void EEPROM_readSettings() {
 //  EEPROM.write(0, 2);
 
+time_values.radio_break = TIME_VALUES_RADIO_BREAK;
 
 #ifdef POINT_ID_PROG
   radio_values.point_id = POINT_ID_PROG;
@@ -20,7 +21,7 @@ void EEPROM_readSettings() {
 
     
 #ifdef DEBUG
-  Log.Info("RADIO POINT ID:%d "CR,radio_values.point_id);
+  Log.Info("START RADIO POINT ID:%d "CR,radio_values.point_id);
 #endif
 }
 //EEPROM.write(addr, val);
