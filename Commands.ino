@@ -79,6 +79,9 @@ if (radio_input_message[RADIO_MESSAGE_ID_COMMAND] == 200){
     case RADIO_COMMAND_DHT_HUMI_GET:
          radio_send_message(radio_values.master_id,RADIO_COMMAND_DHT_HUMI_RESP,radio_input_message[RADIO_MESSAGE_ARG_1],dht[get_dht_id_of_pin(radio_input_message[RADIO_MESSAGE_ARG_1])]->readHumidity());
     break;
+    case RADIO_COMMAND_DHT_ADD:
+          add_dht_sensor(radio_input_message[RADIO_MESSAGE_ARG_1],radio_input_message[RADIO_MESSAGE_ARG_2]);
+    break;
     }
   radio_clean_radio_input_message();
 }
@@ -92,6 +95,9 @@ void add_dht_sensor(int pin,int type){
   DHT_sensors[dht_counter] = pin;
   dht[dht_counter] = new DHT(pin, type);
   dht[dht_counter]->begin();
+#ifdef DEBUG
+  Log.Info ("Add DHT%d on pin %d"CR,radio_input_message[RADIO_MESSAGE_ARG_2],radio_input_message[RADIO_MESSAGE_ARG_1]);
+#endif
 }
 
 int get_dht_id_of_pin(int pin){

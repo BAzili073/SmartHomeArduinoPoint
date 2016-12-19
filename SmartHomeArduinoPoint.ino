@@ -27,6 +27,7 @@ Radio_a radio_values;
 #define PIN_VALUES_MODE 0
 #define PIN_VALUES_NOTIFY_CHANGE 1
 #define PIN_VALUES_STATE 2
+
 int pin_values[PIN_NUMBERS][3];
 
 
@@ -50,6 +51,7 @@ void(* resetFunc) (void) = 0; // объявляем функцию reset
 #define RADIO_COMMAND_DHT_TEMP_RESP 11
 #define RADIO_COMMAND_DHT_HUMI_GET 12
 #define RADIO_COMMAND_DHT_HUMI_RESP 13
+#define RADIO_COMMAND_DHT_ADD 14
 
 #define RADIO_COMMAND_DIGITALREAD_RESP 108
 #define RADIO_COMMAND_ANALOGREAD_RESP 109
