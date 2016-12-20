@@ -13,15 +13,19 @@
 #endif
 
 //#define POINT_ID_PROG 3
+//#define POINT_MASTER
 struct Time_values {
   byte sec;
   byte min;
   int msec;
   int radio_break;
-  byte start;
+  int first_start;
 };
 Time_values time_values;
 #define TIME_VALUES_RADIO_BREAK 5//minutes
+
+#define POINT_STATE_OFFLINE 0
+#define POINT_STATE_ONLINE 1
 
 struct Radio_a {
   int point_id;
@@ -30,7 +34,7 @@ struct Radio_a {
   int send_try;
   int master_id;
   int last_id_command;
-  int time_break;
+  byte state;
 };
 Radio_a radio_values;
 
@@ -65,6 +69,11 @@ void(* resetFunc) (void) = 0; // объявляем функцию reset
 #define RADIO_COMMAND_DHT_ADD 14
 #define RADIO_COMMAND_FULL_RESET 15
 #define RADIO_COMMAND_CHANGE_POINT_ID 16
+#define RADIO_COMMAND_POINT_ON 17 
+#define RADIO_COMMAND_PING 18
+#define RADIO_COMMAND_PONG 19
+#define RADIO_COMMAND_PING_FOR_ALL 20
+#define RADIO_COMMAND_CHANGE_MASTER_ID 21
 
 #define RADIO_COMMAND_DIGITALREAD_RESP 108
 #define RADIO_COMMAND_ANALOGREAD_RESP 109

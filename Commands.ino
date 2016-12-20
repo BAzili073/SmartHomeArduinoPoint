@@ -9,6 +9,7 @@ void react_to_change(){
   for (i = 0; i < PIN_NUMBERS; i++){
     if ((pin_values[i][PIN_VALUES_MODE] == INPUT) && (pin_values[i][PIN_VALUES_NOTIFY_CHANGE])){
       int a = digitalRead(i);
+      Log.Info ("a[%d] = %d"CR,i,a);
         if ( a != pin_values[i][PIN_VALUES_STATE]){
             pin_values[i][PIN_VALUES_STATE] = a;
             radio_send_message(radio_values.master_id,RADIO_COMMAND_PIN_NOTIFY_CHANGE,i,a);
@@ -56,11 +57,15 @@ if (radio_input_message[RADIO_MESSAGE_ID_COMMAND] == 200){
     break;
     case RADIO_COMMAND_ANALOG_WRITE:
       digitalWrite(radio_input_message[RADIO_MESSAGE_ARG_1],radio_input_message[RADIO_MESSAGE_ARG_2]);
-  #ifdef DEBUG
+#ifdef DEBUG
      Log.Info ("analogWrite(%d,%d);"CR,radio_input_message[RADIO_MESSAGE_ARG_1],radio_input_message[RADIO_MESSAGE_ARG_2]);
 #endif 
     break;
-
+    case RADIO_COMMAND_PIN_NOTIFY_CHANGE:
+#ifdef DEBUG
+     Log.Info ("Notify change! Point ID:%d, Pin:%d, State:%d;"CR,radio_input_message[RADIO_MESSAGE_ID_SENDER],radio_input_message[RADIO_MESSAGE_ARG_1],radio_input_message[RADIO_MESSAGE_ARG_2]);
+#endif 
+    break;
     case RADIO_COMMAND_PIN_SET_SETTING:
         pin_change_setting(radio_input_message[RADIO_MESSAGE_ARG_1],radio_input_message[RADIO_MESSAGE_ARG_2],1);
     break;
@@ -68,16 +73,16 @@ if (radio_input_message[RADIO_MESSAGE_ID_COMMAND] == 200){
          pin_change_setting(radio_input_message[RADIO_MESSAGE_ARG_1],radio_input_message[RADIO_MESSAGE_ARG_2],0);
     break;
     case RADIO_COMMAND_DIGITALREAD:
-         radio_send_message(radio_values.master_id,RADIO_COMMAND_DIGITALREAD_RESP,radio_input_message[RADIO_MESSAGE_ARG_1],digitalRead(radio_input_message[RADIO_MESSAGE_ARG_1]));
+         radio_send_message(radio_input_message[RADIO_MESSAGE_ID_SENDER],RADIO_COMMAND_DIGITALREAD_RESP,radio_input_message[RADIO_MESSAGE_ARG_1],digitalRead(radio_input_message[RADIO_MESSAGE_ARG_1]));
     break;
     case RADIO_COMMAND_ANALOGREAD:
-         radio_send_message(radio_values.master_id,RADIO_COMMAND_ANALOGREAD_RESP,radio_input_message[RADIO_MESSAGE_ARG_1],analogRead(radio_input_message[RADIO_MESSAGE_ARG_1]));
+         radio_send_message(radio_input_message[RADIO_MESSAGE_ID_SENDER],RADIO_COMMAND_ANALOGREAD_RESP,radio_input_message[RADIO_MESSAGE_ARG_1],analogRead(radio_input_message[RADIO_MESSAGE_ARG_1]));
     break;
     case RADIO_COMMAND_DHT_TEMP_GET:
-         radio_send_message(radio_values.master_id,RADIO_COMMAND_DHT_TEMP_RESP,radio_input_message[RADIO_MESSAGE_ARG_1],dht[get_dht_id_of_pin(radio_input_message[RADIO_MESSAGE_ARG_1])]->readTemperature());
+         radio_send_message(radio_input_message[RADIO_MESSAGE_ID_SENDER],RADIO_COMMAND_DHT_TEMP_RESP,radio_input_message[RADIO_MESSAGE_ARG_1],dht[get_dht_id_of_pin(radio_input_message[RADIO_MESSAGE_ARG_1])]->readTemperature());
     break;
     case RADIO_COMMAND_DHT_HUMI_GET:
-         radio_send_message(radio_values.master_id,RADIO_COMMAND_DHT_HUMI_RESP,radio_input_message[RADIO_MESSAGE_ARG_1],dht[get_dht_id_of_pin(radio_input_message[RADIO_MESSAGE_ARG_1])]->readHumidity());
+         radio_send_message(radio_input_message[RADIO_MESSAGE_ID_SENDER],RADIO_COMMAND_DHT_HUMI_RESP,radio_input_message[RADIO_MESSAGE_ARG_1],dht[get_dht_id_of_pin(radio_input_message[RADIO_MESSAGE_ARG_1])]->readHumidity());
     break;
     case RADIO_COMMAND_DHT_ADD:
           add_dht_sensor(radio_input_message[RADIO_MESSAGE_ARG_1],radio_input_message[RADIO_MESSAGE_ARG_2]);
@@ -96,12 +101,44 @@ if (radio_input_message[RADIO_MESSAGE_ID_COMMAND] == 200){
   Log.Info ("Change point ID! New Point ID: %d!"CR,radio_input_message[RADIO_MESSAGE_ARG_1]);
 #endif
     break;
+    case RADIO_COMMAND_CHANGE_MASTER_ID:
+      EEPROM.put(2,radio_input_message[RADIO_MESSAGE_ARG_1]);
+      radio_values.master_id = radio_input_message[RADIO_MESSAGE_ARG_1];
+#ifdef DEBUG
+  Log.Info ("Change master ID! New master ID: %d!"CR,radio_input_message[RADIO_MESSAGE_ARG_1]);
+#endif
+    break;
+    case RADIO_COMMAND_PING:
+#ifdef DEBUG
+  Log.Info ("Get Ping from Point ID: %d!"CR,radio_input_message[RADIO_MESSAGE_ID_SENDER]);
+#endif
+        radio_values.state = POINT_STATE_ONLINE;
+        time_values.first_start = -1;
+         time_values.radio_break = TIME_VALUES_RADIO_BREAK;
+        radio_send_message(radio_input_message[RADIO_MESSAGE_ID_SENDER],RADIO_COMMAND_PONG,0,0);     
+    break;
+    case RADIO_COMMAND_PING_FOR_ALL:
+          time_values.first_start = radio_values.point_id * 5;
+    break;
+    case RADIO_COMMAND_PONG:
+#ifdef DEBUG
+  Log.Info ("Get PONG from Point ID: %d!"CR,radio_input_message[RADIO_MESSAGE_ID_SENDER]);
+#endif
+    break;
+    case RADIO_COMMAND_POINT_ON:
+#ifdef DEBUG
+  Log.Info ("Found a new point! Id: %d!"CR,radio_input_message[RADIO_MESSAGE_ID_SENDER]);
+#endif
+         radio_send_message(radio_input_message[RADIO_MESSAGE_ID_SENDER],RADIO_COMMAND_PING,0,0);
+
+    break;
     }
   radio_clean_radio_input_message();
 }
 
 void pin_change_setting(int pin, int setting,int value){
   pin_values[pin][setting] = value;
+    Log.Info ("Pin %d   Setiing %d   Value %d"CR,pin,setting,value);
 }
 
 void add_dht_sensor(int pin,int type){
