@@ -79,10 +79,24 @@ if (radio_input_message[RADIO_MESSAGE_ID_COMMAND] == 200){
          radio_send_message(radio_input_message[RADIO_MESSAGE_ID_SENDER],RADIO_COMMAND_ANALOGREAD_RESP,radio_input_message[RADIO_MESSAGE_ARG_1],analogRead(radio_input_message[RADIO_MESSAGE_ARG_1]));
     break;
     case RADIO_COMMAND_DHT_TEMP_GET:
+       if (get_dht_id_of_pin(radio_input_message[RADIO_MESSAGE_ARG_1]) != -1)
          radio_send_message(radio_input_message[RADIO_MESSAGE_ID_SENDER],RADIO_COMMAND_DHT_TEMP_RESP,radio_input_message[RADIO_MESSAGE_ARG_1],dht[get_dht_id_of_pin(radio_input_message[RADIO_MESSAGE_ARG_1])]->readTemperature());
+       else radio_send_message(radio_input_message[RADIO_MESSAGE_ID_SENDER],RADIO_COMMAND_DHT_TEMP_RESP,radio_input_message[RADIO_MESSAGE_ARG_1],-255);
+    break;
+    case RADIO_COMMAND_DHT_TEMP_RESP:
+#ifdef DEBUG
+     Log.Info ("Get temp! Point ID:%d, Pin:%d, Temp:%d;"CR,radio_input_message[RADIO_MESSAGE_ID_SENDER],radio_input_message[RADIO_MESSAGE_ARG_1],radio_input_message[RADIO_MESSAGE_ARG_2]);
+#endif 
+    break;
+    case RADIO_COMMAND_DHT_HUMI_RESP:
+#ifdef DEBUG
+     Log.Info ("Get humi! Point ID:%d, Pin:%d, Humi:%d;"CR,radio_input_message[RADIO_MESSAGE_ID_SENDER],radio_input_message[RADIO_MESSAGE_ARG_1],radio_input_message[RADIO_MESSAGE_ARG_2]);
+#endif
     break;
     case RADIO_COMMAND_DHT_HUMI_GET:
+      if (get_dht_id_of_pin(radio_input_message[RADIO_MESSAGE_ARG_1]) != -1)
          radio_send_message(radio_input_message[RADIO_MESSAGE_ID_SENDER],RADIO_COMMAND_DHT_HUMI_RESP,radio_input_message[RADIO_MESSAGE_ARG_1],dht[get_dht_id_of_pin(radio_input_message[RADIO_MESSAGE_ARG_1])]->readHumidity());
+      else radio_send_message(radio_input_message[RADIO_MESSAGE_ID_SENDER],RADIO_COMMAND_DHT_TEMP_RESP,radio_input_message[RADIO_MESSAGE_ARG_1],-255);
     break;
     case RADIO_COMMAND_DHT_ADD:
           add_dht_sensor(radio_input_message[RADIO_MESSAGE_ARG_1],radio_input_message[RADIO_MESSAGE_ARG_2]);
@@ -156,6 +170,7 @@ int get_dht_id_of_pin(int pin){
   for (i = 0; i < DHT_NUMBERS;i++){
     if (DHT_sensors[i] == pin) return i; 
   }
+  return -1;
 }
 
 

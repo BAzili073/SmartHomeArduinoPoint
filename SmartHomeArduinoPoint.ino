@@ -120,6 +120,10 @@ int fail_pack = 0;
 
 
 void setup() {
+int i;
+for (i = 0;i<DHT_NUMBERS;i++){
+  DHT_sensors[i] = -1;
+}
 Serial.begin(9600);
 pinMode (LED,OUTPUT);
 #ifdef DEBUG
