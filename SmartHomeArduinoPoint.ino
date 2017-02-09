@@ -12,6 +12,14 @@
 #include <Logging.h>
 #endif
 
+
+//SERVE
+int points[5];
+
+//
+
+
+
 //#define POINT_ID_PROG 3
 //#define POINT_MASTER
 struct Time_values {
@@ -36,6 +44,7 @@ struct Radio_a {
   int last_id_command;
   byte state;
 };
+
 Radio_a radio_values;
 
 #define PIN_NUMBERS 21
@@ -60,8 +69,8 @@ void(* resetFunc) (void) = 0; // объявляем функцию reset
 #define RADIO_COMMAND_PIN_NOTIFY_CHANGE 5
 #define RADIO_COMMAND_PIN_SET_SETTING 6
 #define RADIO_COMMAND_PIN_RESET_SETTING 7
-#define RADIO_COMMAND_DIGITALREAD 8
-#define RADIO_COMMAND_ANALOGREAD 9
+#define RADIO_COMMAND_DIGITAL_READ 8
+#define RADIO_COMMAND_ANALOG_READ 9
 #define RADIO_COMMAND_DHT_TEMP_GET 10
 #define RADIO_COMMAND_DHT_TEMP_RESP 11
 #define RADIO_COMMAND_DHT_HUMI_GET 12
@@ -124,14 +133,16 @@ int i;
 for (i = 0;i<DHT_NUMBERS;i++){
   DHT_sensors[i] = -1;
 }
-Serial.begin(9600);
+Serial.begin(115200);
 pinMode (LED,OUTPUT);
 #ifdef DEBUG
-Log.Init(LOGLEVEL, 9600L);
+Log.Init(LOGLEVEL, 115200L);
 #endif  
 EEPROM_readSettings();
 setupTimer(1000);
 setup_radio();
+//  TCCR0B = TCCR0B & 0b11111000 | 0x01;
+//  TCCR2B = TCCR2B & 0b11111000 | 0x01;
 }
 
 void loop() {

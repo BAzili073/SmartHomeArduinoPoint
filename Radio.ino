@@ -114,6 +114,20 @@ void radio_work(){
     }
 }
 
+bool radio_send_try_try(){
+  radio_values.send_try = 1;
+  while(radio_values.send_try){
+            radio_send ();
+        radio_values.send_try++;
+        if (radio_values.send_try >= 15){
+#ifdef DEBUG
+  Log.Info ("Radio send message ERROR"CR);
+#endif
+          radio_flags[RADIO_FLAGS_SEND_SUCC] = 1 ;
+          radio_values.send_try = 0;
+        }
+  }
+}
 
 void radio_clean_radio_input_message(){
   int i;

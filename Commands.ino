@@ -19,6 +19,7 @@ void react_to_change(){
 }
 
 void analysis_Message(){
+  Log.Info ("command %d ARG1 %d ARG2 %d"CR,radio_input_message[RADIO_MESSAGE_COMMAND],radio_input_message[RADIO_MESSAGE_ARG_1],radio_input_message[RADIO_MESSAGE_ARG_2]);
     radio_values.last_id_command = radio_input_message[RADIO_MESSAGE_ID_COMMAND]; 
     
     switch (radio_input_message[RADIO_MESSAGE_COMMAND]){
@@ -56,7 +57,7 @@ if (radio_input_message[RADIO_MESSAGE_ID_COMMAND] == 200){
 #endif 
     break;
     case RADIO_COMMAND_ANALOG_WRITE:
-      digitalWrite(radio_input_message[RADIO_MESSAGE_ARG_1],radio_input_message[RADIO_MESSAGE_ARG_2]);
+      analogWrite(radio_input_message[RADIO_MESSAGE_ARG_1],radio_input_message[RADIO_MESSAGE_ARG_2]);
 #ifdef DEBUG
      Log.Info ("analogWrite(%d,%d);"CR,radio_input_message[RADIO_MESSAGE_ARG_1],radio_input_message[RADIO_MESSAGE_ARG_2]);
 #endif 
@@ -65,6 +66,10 @@ if (radio_input_message[RADIO_MESSAGE_ID_COMMAND] == 200){
 #ifdef DEBUG
      Log.Info ("Notify change! Point ID:%d, Pin:%d, State:%d;"CR,radio_input_message[RADIO_MESSAGE_ID_SENDER],radio_input_message[RADIO_MESSAGE_ARG_1],radio_input_message[RADIO_MESSAGE_ARG_2]);
 #endif 
+        if (radio_input_message[RADIO_MESSAGE_ID_SENDER] == 3 && radio_input_message[RADIO_MESSAGE_ARG_1] == 4){
+              radio_send_message(4,RADIO_COMMAND_DIGITAL_WRITE,17,radio_input_message[RADIO_MESSAGE_ARG_2]);  
+        }
+      
     break;
     case RADIO_COMMAND_PIN_SET_SETTING:
         pin_change_setting(radio_input_message[RADIO_MESSAGE_ARG_1],radio_input_message[RADIO_MESSAGE_ARG_2],1);
@@ -72,10 +77,10 @@ if (radio_input_message[RADIO_MESSAGE_ID_COMMAND] == 200){
     case RADIO_COMMAND_PIN_RESET_SETTING:
          pin_change_setting(radio_input_message[RADIO_MESSAGE_ARG_1],radio_input_message[RADIO_MESSAGE_ARG_2],0);
     break;
-    case RADIO_COMMAND_DIGITALREAD:
+    case RADIO_COMMAND_DIGITAL_READ:
          radio_send_message(radio_input_message[RADIO_MESSAGE_ID_SENDER],RADIO_COMMAND_DIGITALREAD_RESP,radio_input_message[RADIO_MESSAGE_ARG_1],digitalRead(radio_input_message[RADIO_MESSAGE_ARG_1]));
     break;
-    case RADIO_COMMAND_ANALOGREAD:
+    case RADIO_COMMAND_ANALOG_READ:
          radio_send_message(radio_input_message[RADIO_MESSAGE_ID_SENDER],RADIO_COMMAND_ANALOGREAD_RESP,radio_input_message[RADIO_MESSAGE_ARG_1],analogRead(radio_input_message[RADIO_MESSAGE_ARG_1]));
     break;
     case RADIO_COMMAND_DHT_TEMP_GET:
@@ -143,7 +148,8 @@ if (radio_input_message[RADIO_MESSAGE_ID_COMMAND] == 200){
 #ifdef DEBUG
   Log.Info ("Found a new point! Id: %d!"CR,radio_input_message[RADIO_MESSAGE_ID_SENDER]);
 #endif
-         radio_send_message(radio_input_message[RADIO_MESSAGE_ID_SENDER],RADIO_COMMAND_PING,0,0);
+         if (radio_input_message[RADIO_MESSAGE_ID_SENDER] == 3) setup_point_3();
+         if (radio_input_message[RADIO_MESSAGE_ID_SENDER] == 4) setup_point_4();
 
     break;
     }

@@ -19,10 +19,9 @@ void timerIsr()
     time_values.sec++;
     time_values.msec = 0;
     if ((time_values.first_start > 0) && (radio_values.master_id != radio_values.point_id)) time_values.first_start--;  
-    if (time_values.sec>=60){    
+    if (time_values.sec>=60){   
         time_values.sec = 0;
-        if (time_values.radio_break && (radio_values.master_id != radio_values.point_id)) time_values.radio_break --;
-          
+//        if (time_values.radio_break && (radio_values.master_id != radio_values.point_id)) time_values.radio_break --;          
     }
   } 
 }
